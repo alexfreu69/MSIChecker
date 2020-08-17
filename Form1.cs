@@ -131,32 +131,37 @@ namespace MSIChecker
                         long iSize = GetSize(sFile);
                         iSumSize += iSize;
                         grid.Rows.Add(new object[] { sProduct, "MSI", product, sGUID, sFile, iSize,GetStatus(sFile),user});
-                        aFiles.Add(sFile); 
+                        aFiles.Add(sFile);
 
                         try
                         {
-                            foreach (string patch in rk.OpenSubKey(user + @"\Products\" + product + @"\Patches").GetSubKeyNames())
+                            string sPatchKey = user + @"\Products\" + product + @"\Patches";    //v1.01
+                            RegistryKey regPatchkey = rk.OpenSubKey(sPatchKey);
+                            if (regPatchkey != null)
                             {
-                                string sPatch, sPatchGUID, sPatchFile;
-                                int iUninstallable;
-                                sPatch = GetPatchDisplayName(user, product, patch);
-                                sPatchGUID = KeyName2GUID(patch);
-                                sPatchFile = GetMSPFileName(user, patch);
-                                try
+                                foreach (string patch in regPatchkey.GetSubKeyNames())
                                 {
-                                    iUninstallable = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\" + subkey + @"\" + user + @"\Products\" + product + @"\Patches\" + patch, "Uninstallable", 0);
-                                }
-                                catch (Exception)
-                                {
-                                    iUninstallable = 0;
-                                }
+                                    string sPatch, sPatchGUID, sPatchFile;
+                                    int iUninstallable;
+                                    sPatch = GetPatchDisplayName(user, product, patch);
+                                    sPatchGUID = KeyName2GUID(patch);
+                                    sPatchFile = GetMSPFileName(user, patch);
+                                    try
+                                    {
+                                        iUninstallable = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\" + subkey + @"\" + user + @"\Products\" + product + @"\Patches\" + patch, "Uninstallable", 0);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        iUninstallable = 0;
+                                    }
 
-                                if (!aFiles.Contains(sPatchFile))
-                                {
-                                    aFiles.Add(sPatchFile);
-                                    long iPatchSize = GetSize(sPatchFile);
-                                    iSumSize += iPatchSize;
-                                    grid.Rows.Add(new object[] { sPatch, "MSP", patch, sPatchGUID, sPatchFile, iPatchSize, GetStatus(sPatchFile),user,sGUID, iUninstallable });
+                                    if (!aFiles.Contains(sPatchFile))
+                                    {
+                                        aFiles.Add(sPatchFile);
+                                        long iPatchSize = GetSize(sPatchFile);
+                                        iSumSize += iPatchSize;
+                                        grid.Rows.Add(new object[] { sPatch, "MSP", patch, sPatchGUID, sPatchFile, iPatchSize, GetStatus(sPatchFile), user, sGUID, iUninstallable });
+                                    }
                                 }
                             }
 
